@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سامانه ثبت و گزارش تنخواه‌گردان</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Vazirmatn Persian Font CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'Tahoma', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hide default number controls */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Safe area support for iOS and bottom bar */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+
+        /* Smooth tab transition */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Print styles optimized for accounting official documents (A4 portrait) */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm 10mm 15mm 10mm;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11pt !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .tab-content {
+                display: block !important;
+                opacity: 1 !important;
+            }
+            table {
+                page-break-inside: auto;
+                width: 100% !important;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+            tfoot {
+                display: table-footer-group;
+            }
+        }
+
+        .print-only {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header (Screen Only) -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 shadow-md no-print sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-500 text-slate-950 rounded-xl flex items-center justify-center font-black shadow-lg shadow-emerald-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-black tracking-tight leading-none">مدیریت تنخواه‌گردان</h1>
+                    <p class="text-[11px] text-slate-400 mt-1">نسخه هوشمند و موبایل‌فرندلی مالی</p>
+                </div>
+            </div>
+
+            <!-- Currency Unit Selector & Actions -->
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-800 p-1 rounded-lg border border-slate-700 flex text-xs">
+                    <button type="button" id="currTomans" onclick="setCurrencyUnit('toman')" class="px-2.5 py-1 rounded-md transition font-medium text-slate-300">تومان</button>
+                    <button type="button" id="currRials" onclick="setCurrencyUnit('rial')" class="px-2.5 py-1 rounded-md transition font-bold bg-emerald-600 text-white shadow-sm">ریال</button>
+                </div>
+                
+                <button onclick="window.print()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    چاپ A4
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 w-full flex-grow mb-16 md:mb-0 no-print">
+
+        <!-- Top Overview Summary Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-4 sm:mb-6">
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                <span class="text-[11px] sm:text-xs text-slate-500 font-semibold">موجودی تنخواه اولیه</span>
+                <div class="mt-2">
+                    <h3 id="kpiInitialFund" class="text-sm sm:text-lg font-black text-slate-800 truncate">۰</h3>
+                    <span class="currencyLabel text-[10px] text-slate-400">ریال</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                <span class="text-[11px] sm:text-xs text-rose-500 font-semibold">کل مبالغ هزینه شده</span>
+                <div class="mt-2">
+                    <h3 id="kpiTotalExpenses" class="text-sm sm:text-lg font-black text-rose-600 truncate">۰</h3>
+                    <span class="currencyLabel text-[10px] text-slate-400">ریال</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                <span class="text-[11px] sm:text-xs text-slate-500 font-semibold">مانده نزد تنخواه‌دار</span>
+                <div class="mt-2">
+                    <h3 id="kpiRemainingBalance" class="text-sm sm:text-lg font-black text-emerald-600 truncate">۰</h3>
+                    <span class="currencyLabel text-[10px] text-slate-400">ریال</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                <span class="text-[11px] sm:text-xs text-slate-500 font-semibold">تعداد اسناد و فاکتورها</span>
+                <div class="mt-2">
+                    <h3 id="kpiItemsCount" class="text-sm sm:text-lg font-black text-indigo-600">۰</h3>
+                    <span class="text-[10px] text-slate-400">ردیف فاکتور</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Navigation Tabs Bar -->
+        <div class="hidden md:flex items-center gap-2 border-b border-slate-200 pb-3 mb-6">
+            <button onclick="switchTab('tab-form')" id="deskBtn-tab-form" class="desk-tab-btn px-4 py-2 text-sm font-bold rounded-xl transition bg-emerald-600 text-white shadow-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                ثبت فاکتور جدید و تنظیمات
+            </button>
+            <button onclick="switchTab('tab-list')" id="deskBtn-tab-list" class="desk-tab-btn px-4 py-2 text-sm font-bold rounded-xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                لیست هزینه‌ها و اسناد
+                <span id="deskCountBadge" class="bg-slate-100 text-slate-700 text-xs px-2 py-0.5 rounded-full">۰</span>
+            </button>
+            <button onclick="switchTab('tab-report')" id="deskBtn-tab-report" class="desk-tab-btn px-4 py-2 text-sm font-bold rounded-xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                پیش‌نمایش چاپ و گزارش حسابداری
+            </button>
+        </div>
+
+        <!-- TAB 1: FORM & SETTINGS -->
+        <div id="tab-form" class="tab-content active space-y-4">
+            
+            <!-- Fund Settings Accordion / Box -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                    <span class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                        <span class="w-2 h-4 bg-emerald-500 rounded-full"></span>
+                        اطلاعات پرونده و صندوق تنخواه
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-medium">مشخصات اداری گزارش</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">نام سازمان / شرکت</label>
+                        <input type="text" id="metaCompanyName" oninput="saveData()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="مثلاً: شرکت پیشرو صنعت">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">نام و نام‌خانوادگی تنخواه‌دار</label>
+                        <input type="text" id="metaCustodianName" oninput="saveData()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="مثلاً: علی محمدی">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">شماره صورت‌حساب</label>
+                        <input type="text" id="metaReportNumber" oninput="saveData()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="مثلاً: TK-1403/09">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1">تاریخ تحویل یا ثبت گزارش</label>
+                        <input type="text" id="metaReportDate" oninput="saveData()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="1403/09/20">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-600 mb-1">سقف اولیه تنخواه دریافتی (<span class="currencyLabel">ریال</span>)</label>
+                        <input type="text" inputmode="numeric" id="metaInitialFund" oninput="handleCurrencyInput(this); updateCalculations();" class="w-full px-3 py-2.5 text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="مثال: ۵۰,۰۰۰,۰۰۰">
+                    </div>
+                    <div class="sm:col-span-2 flex items-end">
+                        <div class="w-full bg-emerald-50/70 border border-emerald-100 rounded-xl p-2.5 text-xs text-emerald-900 leading-tight truncate">
+                            <span class="text-emerald-700 font-bold ml-1">به حروف:</span>
+                            <span id="initialFundWords" class="font-black">صفر</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Registration Form -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <span class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                        <span class="w-2 h-4 bg-emerald-600 rounded-full"></span>
+                        <span id="formTitleText">ثبت هزینه / فاکتور جدید</span>
+                    </span>
+                    <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden text-xs text-rose-600 hover:text-rose-700 font-bold bg-rose-50 px-2.5 py-1 rounded-lg transition">
+                        انصراف از ویرایش
+                    </button>
+                </div>
+
+                <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="editingId" value="">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-1">تاریخ فاکتور / سند *</label>
+                            <input type="text" id="expDate" required placeholder="مثلاً: 1403/09/15" class="w-full px-3 py-3 sm:py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-1">شماره سند یا رسید *</label>
+                            <input type="text" id="expDocNum" required placeholder="مثلاً: فاکتور ۴۵۸" class="w-full px-3 py-3 sm:py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-1">سرفصل و مرکز هزینه *</label>
+                            <select id="expCategory" required class="w-full px-3 py-3 sm:py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition font-medium">
+                                <option value="پذیرایی و تشریفات">☕ پذیرایی و تشریفات</option>
+                                <option value="ایاب و ذهاب و تاکسی">🚕 ایاب و ذهاب و سوخت</option>
+                                <option value="ملزومات اداری و مصرفی">📎 ملزومات اداری و مصرفی</option>
+                                <option value="پست، باربری و ارسال">📦 پست، باربری و ارسال</option>
+                                <option value="تعمیرات، نگهداری و تأسیسات">🔧 تعمیرات و نگهداری</option>
+                                <option value="اینترنت، نرم‌افزار و ارتباطات">🌐 اینترنت و ارتباطات</option>
+                                <option value="سایر و متفرقه">🏷️ سایر هزینه‌ها</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-600 mb-1">طرف حساب / فروشنده *</label>
+                            <input type="text" id="expVendor" required placeholder="مثلاً: هایپرمارکت بهار" class="w-full px-3 py-3 sm:py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block font-semibold text-slate-600 mb-1">مبلغ هزینه (<span class="currencyLabel">ریال</span>) *</label>
+                            <div class="relative">
+                                <input type="text" inputmode="numeric" id="expAmount" required oninput="handleCurrencyInput(this); updateExpenseWordsPreview(this.value);" placeholder="مبلغ را وارد کنید" class="w-full px-3 py-3 sm:py-2.5 text-sm font-black bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Words Preview For Expense -->
+                    <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/60 text-xs text-slate-600 flex items-center gap-1.5 truncate">
+                        <span class="text-slate-400 font-bold">مبلغ به حروف:</span>
+                        <span id="expWordsHint" class="font-bold text-emerald-800">---</span>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-600 mb-1 text-xs">شرح دقیق و علت هزینه *</label>
+                        <textarea id="expDesc" rows="2" required placeholder="مثلاً: خرید قهوه، شیر و چای کیسه‌ای جهت جلسات اتاق فکر و هیئت مدیره" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2">
+                        <button type="submit" id="submitBtn" class="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black text-sm rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            <span id="submitBtnText">ثبت و افزودن به لیست</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 2: EXPENSES LIST -->
+        <div id="tab-list" class="tab-content space-y-4">
+            
+            <!-- Filters & Search Bar -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                <div class="relative flex-grow">
+                    <input type="text" id="searchInput" oninput="renderExpenses()" placeholder="جستجو در شرح، فروشنده، شماره سند..." class="w-full pr-9 pl-3 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                    <svg class="w-4 h-4 text-slate-400 absolute right-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <select id="categoryFilter" onchange="renderExpenses()" class="w-full sm:w-44 px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+                        <option value="ALL">تمام سرفصل‌ها</option>
+                        <option value="پذیرایی و تشریفات">پذیرایی و تشریفات</option>
+                        <option value="ایاب و ذهاب و تاکسی">ایاب و ذهاب و سوخت</option>
+                        <option value="ملزومات اداری و مصرفی">ملزومات اداری و مصرفی</option>
+                        <option value="پست، باربری و ارسال">پست، باربری و ارسال</option>
+                        <option value="تعمیرات، نگهداری و تأسیسات">تعمیرات و نگهداری</option>
+                        <option value="اینترنت، نرم‌افزار و ارتباطات">اینترنت و ارتباطات</option>
+                        <option value="سایر و متفرقه">سایر هزینه‌ها</option>
+                    </select>
+
+                    <button onclick="exportToCSV()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap shadow-sm" title="دریافت فایل اکسل">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        اکسل
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Cards View (Visible on screens < 768px) -->
+            <div id="mobileCardsContainer" class="md:hidden space-y-3">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <!-- Desktop Table View (Visible on screens >= 768px) -->
+            <div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
+                                <th class="py-3 px-3 w-12 text-center">#</th>
+                                <th class="py-3 px-3 w-24">تاریخ</th>
+                                <th class="py-3 px-3 w-28">شماره سند</th>
+                                <th class="py-3 px-3 w-36">سرفصل</th>
+                                <th class="py-3 px-3 w-36">فروشنده</th>
+                                <th class="py-3 px-4">شرح هزینه</th>
+                                <th class="py-3 px-4 w-32 text-left">مبلغ (<span class="currencyLabel">ریال</span>)</th>
+                                <th class="py-3 px-3 w-20 text-center">عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="desktopTableBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                            <!-- Injected via JS -->
+                        </tbody>
+                        <tfoot class="bg-slate-50 font-black text-slate-900 border-t-2 border-slate-200">
+                            <tr>
+                                <td colspan="6" class="py-3.5 px-4 text-left">مجموع هزینه‌های فیلتر شده:</td>
+                                <td id="desktopTableTotal" class="py-3.5 px-4 text-left text-rose-600 font-black text-sm">۰</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Empty State Container -->
+            <div id="emptyListState" class="hidden text-center py-12 px-4 bg-white rounded-2xl border border-dashed border-slate-300">
+                <div class="w-14 h-14 mx-auto mb-3 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <h3 class="text-sm font-bold text-slate-700">هیچ سندی در این لیست موجود نیست</h3>
+                <p class="text-xs text-slate-400 mt-1">با زدن دکمه «ثبت فاکتور جدید» اولین ردیف هزینه خود را ایجاد کنید.</p>
+                <button onclick="switchTab('tab-form')" class="mt-4 px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition">
+                    رفتن به فرم ثبت
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 3: ACCOUNTANT REPORT & PREVIEW -->
+        <div id="tab-report" class="tab-content space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <div>
+                        <h2 class="text-sm sm:text-base font-black text-slate-800">پیش‌نمایش صورت‌جلسه تسویه تنخواه</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">این برگه عینا با فشردن دکمه چاپ، بر روی برگه A4 پرینت گرفته می‌شود.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.print()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            پرینت / ذخیره PDF
+                        </button>
+                        <button onclick="confirmResetAll()" class="px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-xl transition" title="پاک‌سازی و شروع دوره جدید">
+                            دوره جدید
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Report Summary Box in App -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2 mb-4">
+                    <div class="flex justify-between py-1 border-b border-slate-200/60">
+                        <span class="text-slate-500">تنخواه‌دار مسئول:</span>
+                        <span id="repSummaryCustodian" class="font-bold text-slate-800">---</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-200/60">
+                        <span class="text-slate-500">سقف کل دریافتی:</span>
+                        <span id="repSummaryInit" class="font-bold text-slate-800">۰</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-200/60">
+                        <span class="text-slate-500">مجموع اسناد تسلیم شده:</span>
+                        <span id="repSummarySpent" class="font-bold text-rose-600">۰</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-200/60">
+                        <span class="text-slate-500">مانده قابل استرداد به شرکت:</span>
+                        <span id="repSummaryRem" class="font-black text-emerald-600">۰</span>
+                    </div>
+                    <div class="pt-2">
+                        <span class="text-slate-500 block mb-1">جمع هزینه به حروف:</span>
+                        <span id="repSummaryWords" class="font-bold text-slate-900 leading-relaxed block bg-white p-2.5 rounded-lg border border-slate-200">صفر</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
+                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>نکته: در برگه چاپی رسمی، جدول امضای ۴ نفره شامل مسئول تنخواه، حسابدار، مدیر مالی و مدیرعامل درج خواهد شد.</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- OFFICIAL A4 PRINT DOCUMENT (Active only during window.print()) -->
+    <section id="officialPrintDocument" class="print-only max-w-full px-2 py-1 text-black bg-white">
+        <!-- Print Header -->
+        <div class="border-b-2 border-black pb-3 mb-4 flex items-center justify-between">
+            <div class="w-1/3 text-right">
+                <h3 class="text-base font-extrabold" id="printHeaderCompany">شرکت / سازمان</h3>
+                <p class="text-xs text-slate-700 mt-1">واحد امور مالی و حسابداری</p>
+                <p class="text-[10px] text-slate-600 mt-0.5">فرم شماره: فرم-تنخواه-۰۱</p>
+            </div>
+            <div class="w-1/3 text-center">
+                <h2 class="text-xl font-black tracking-wider">صورت خلاصه و ریز اسناد تنخواه</h2>
+                <p class="text-xs font-semibold mt-1">تسویه دوره تنخواه‌گردانی</p>
+            </div>
+            <div class="w-1/3 text-left text-xs space-y-1">
+                <p><span class="font-bold">شماره گزارش:</span> <span id="printRepNumber">---</span></p>
+                <p><span class="font-bold">تاریخ صورت:</span> <span id="printRepDate">---</span></p>
+                <p><span class="font-bold">مسئول تنخواه:</span> <span id="printCustodian">---</span></p>
+                <p><span class="font-bold">واحد پول:</span> <span class="currencyLabel">ریال</span></p>
+            </div>
+        </div>
+
+        <!-- Financial Status Box -->
+        <div class="grid grid-cols-3 gap-2 border border-black p-2 text-xs mb-4 text-center font-bold bg-slate-50">
+            <div>سقف تنخواه دریافتی: <span id="printInitialFund">۰</span> <span class="currencyLabel">ریال</span></div>
+            <div>مجموع مخارج ارائه شده: <span id="printTotalExpenses">۰</span> <span class="currencyLabel">ریال</span></div>
+            <div>مانده قابل تسویه: <span id="printRemaining">۰</span> <span class="currencyLabel">ریال</span></div>
+        </div>
+
+        <!-- Print Table -->
+        <table class="w-full border-collapse border border-black text-[11px] mb-4">
+            <thead>
+                <tr class="bg-gray-100 border-b border-black font-black text-center">
+                    <th class="border border-black p-1.5 w-8">ردیف</th>
+                    <th class="border border-black p-1.5 w-20">تاریخ</th>
+                    <th class="border border-black p-1.5 w-20">شماره سند</th>
+                    <th class="border border-black p-1.5 w-28">سرفصل هزینه</th>
+                    <th class="border border-black p-1.5 w-32">فروشنده / ذینفع</th>
+                    <th class="border border-black p-1.5">شرح مشخصات هزینه</th>
+                    <th class="border border-black p-1.5 w-28 text-left">مبلغ (<span class="currencyLabel">ریال</span>)</th>
+                </tr>
+            </thead>
+            <tbody id="printTableBody">
+                <!-- Injected via JS -->
+            </tbody>
+            <tfoot>
+                <tr class="font-black border-t-2 border-black bg-gray-50">
+                    <td colspan="6" class="border border-black p-2 text-left">جمع کل اسناد تحویل شده:</td>
+                    <td id="printSumTotal" class="border border-black p-2 text-left font-black">۰</td>
+                </tr>
+                <tr>
+                    <td colspan="7" class="border border-black p-2 text-right bg-white">
+                        <span class="font-black">مبلغ کل به حروف: </span>
+                        <span id="printSumWords" class="font-bold">صفر</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Signatures 4-Columns Matrix -->
+        <div class="mt-6 border border-black p-3 text-center text-xs">
+            <div class="grid grid-cols-4 gap-2">
+                <div class="h-28 flex flex-col justify-between border-l border-black pl-2">
+                    <span class="font-bold">مسئول تنخواه‌گردان</span>
+                    <span class="text-[10px] text-gray-600">امضا و تاریخ تسلیم اسناد</span>
+                </div>
+                <div class="h-28 flex flex-col justify-between border-l border-black pl-2">
+                    <span class="font-bold">رسیدگی‌کننده اسناد (حسابدار)</span>
+                    <span class="text-[10px] text-gray-600">تطبیق مدارک مثبته و فاکتورها</span>
+                </div>
+                <div class="h-28 flex flex-col justify-between border-l border-black pl-2">
+                    <span class="font-bold">مدیر امور مالی</span>
+                    <span class="text-[10px] text-gray-600">تأیید نهایی جهت ثبت در دفاتر</span>
+                </div>
+                <div class="h-28 flex flex-col justify-between">
+                    <span class="font-bold">مدیرعامل / مقام مجاز</span>
+                    <span class="text-[10px] text-gray-600">دستور پرداخت یا شارژ مجدد</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mobile Bottom Navigation Bar (Visible on mobile only) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-50 px-2 py-1.5 pb-safe shadow-lg no-print flex justify-around items-center">
+        <button onclick="switchTab('tab-form')" id="mBtn-tab-form" class="mob-tab-btn flex flex-col items-center justify-center w-full py-1 text-emerald-600 font-bold">
+            <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <span class="text-[10px]">ثبت فاکتور</span>
+        </button>
+
+        <button onclick="switchTab('tab-list')" id="mBtn-tab-list" class="mob-tab-btn flex flex-col items-center justify-center w-full py-1 text-slate-400 font-medium relative">
+            <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            <span class="text-[10px]">ریز اسناد</span>
+            <span id="mobCountBadge" class="absolute top-0 right-1/4 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">۰</span>
+        </button>
+
+        <button onclick="switchTab('tab-report')" id="mBtn-tab-report" class="mob-tab-btn flex flex-col items-center justify-center w-full py-1 text-slate-400 font-medium">
+            <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="text-[10px]">صورت‌جلسه</span>
+        </button>
+    </nav>
+
+    <script>
+        // State store
+        const STORAGE_KEY = 'PETTY_CASH_SYSTEM_MOBILE_V3';
+        
+        let appData = {
+            currency: 'rial', // 'rial' or 'toman'
+            metadata: {
+                companyName: '',
+                custodianName: '',
+                reportNumber: '',
+                reportDate: '',
+                initialFund: 0
+            },
+            expenses: []
+        };
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateCurrencyUI();
+            renderAll();
+        });
+
+        /* TAB NAVIGATION CONTROLLER */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            const activeEl = document.getElementById(tabId);
+            if (activeEl) activeEl.classList.add('active');
+
+            // Update Desktop buttons
+            document.querySelectorAll('.desk-tab-btn').forEach(btn => {
+                btn.className = 'desk-tab-btn px-4 py-2 text-sm font-bold rounded-xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-2';
+            });
+            const activeDeskBtn = document.getElementById('deskBtn-' + tabId);
+            if (activeDeskBtn) {
+                activeDeskBtn.className = 'desk-tab-btn px-4 py-2 text-sm font-bold rounded-xl transition bg-emerald-600 text-white shadow-sm flex items-center gap-2';
+            }
+
+            // Update Mobile buttons
+            document.querySelectorAll('.mob-tab-btn').forEach(btn => {
+                btn.className = 'mob-tab-btn flex flex-col items-center justify-center w-full py-1 text-slate-400 font-medium relative';
+            });
+            const activeMobBtn = document.getElementById('mBtn-' + tabId);
+            if (activeMobBtn) {
+                activeMobBtn.className = 'mob-tab-btn flex flex-col items-center justify-center w-full py-1 text-emerald-600 font-bold relative';
+            }
+
+            // Smooth scroll top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* CURRENCY TOGGLE (Rial / Toman) */
+        function setCurrencyUnit(unit) {
+            appData.currency = unit;
+            updateCurrencyUI();
+            updateCalculations();
+            saveData();
+        }
+
+        function updateCurrencyUI() {
+            const isToman = appData.currency === 'toman';
+            const btnToman = document.getElementById('currTomans');
+            const btnRial = document.getElementById('currRials');
+
+            if (isToman) {
+                btnToman.className = 'px-2.5 py-1 rounded-md transition font-bold bg-emerald-600 text-white shadow-sm';
+                btnRial.className = 'px-2.5 py-1 rounded-md transition font-medium text-slate-300';
+            } else {
+                btnRial.className = 'px-2.5 py-1 rounded-md transition font-bold bg-emerald-600 text-white shadow-sm';
+                btnToman.className = 'px-2.5 py-1 rounded-md transition font-medium text-slate-300';
+            }
+
+            document.querySelectorAll('.currencyLabel').forEach(el => {
+                el.textContent = isToman ? 'تومان' : 'ریال';
+            });
+        }
+
+        function numToPersianWords(number) {
+            if (number === null || number === undefined || isNaN(number) || number === 0) return 'صفر';
+            
+            const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+            const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+            const tens = ['', '', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+            const hundreds = ['', 'یکصد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+            const scales = ['', 'هزار', 'میلیون', 'میلیارد', 'تریلیون'];
+
+            function convertChunk(n) {
+                let parts = [];
+                const h = Math.floor(n / 100);
+                const remainder = n % 100;
+                
+                if (h > 0) parts.push(hundreds[h]);
+
+                if (remainder >= 10 && remainder <= 19) {
+                    parts.push(teens[remainder - 10]);
+                } else {
+                    const t = Math.floor(remainder / 10);
+                    const u = remainder % 10;
+                    if (t > 0) parts.push(tens[t]);
+                    if (u > 0) parts.push(units[u]);
+                }
+                return parts.join(' و ');
+            }
+
+            let chunks = [];
+            let n = Math.abs(number);
+            let scaleIdx = 0;
+
+            while (n > 0) {
+                const chunk = n % 1000;
+                if (chunk !== 0) {
+                    const chunkText = convertChunk(chunk);
+                    const scaleText = scales[scaleIdx] ? ' ' + scales[scaleIdx] : '';
+                    chunks.unshift(chunkText + scaleText);
+                }
+                n = Math.floor(n / 1000);
+                scaleIdx++;
+            }
+
+            return chunks.join(' و ');
+        }
+
+        /* UTILS & FORMATTERS */
+        function parseCleanNumber(val) {
+            if (!val) return 0;
+            const clean = val.toString().replace(/,/g, '').replace(/[^\d]/g, '').trim();
+            const num = parseInt(clean, 10);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function formatNumber(num) {
+            return (num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function handleCurrencyInput(input) {
+            let val = input.value.replace(/,/g, '').replace(/[^\d]/g, '');
+            if (val === '') {
+                input.value = '';
+                return;
+            }
+            input.value = formatNumber(parseInt(val, 10));
+        }
+
+        function updateExpenseWordsPreview(val) {
+            const num = parseCleanNumber(val);
+            const hint = document.getElementById('expWordsHint');
+            const unit = appData.currency === 'toman' ? 'تومان' : 'ریال';
+            if (num > 0) {
+                hint.textContent = numToPersianWords(num) + ' ' + unit;
+            } else {
+                hint.textContent = '---';
+            }
+        }
+
+        function saveData() {
+            appData.metadata.companyName = document.getElementById('metaCompanyName').value.trim();
+            appData.metadata.custodianName = document.getElementById('metaCustodianName').value.trim();
+            appData.metadata.reportNumber = document.getElementById('metaReportNumber').value.trim();
+            appData.metadata.reportDate = document.getElementById('metaReportDate').value.trim();
+            appData.metadata.initialFund = parseCleanNumber(document.getElementById('metaInitialFund').value);
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        }
+
+        function loadData() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    appData = JSON.parse(stored);
+                } else {
+                    // Defaults
+                    appData.metadata.reportDate = new Intl.DateTimeFormat('fa-IR').format(new Date());
+                    appData.metadata.reportNumber = 'TN-' + Math.floor(1000 + Math.random() * 9000);
+                }
+            } catch (err) {
+                console.error("Local data parse error", err);
+            }
+
+            // Sync Inputs
+            document.getElementById('metaCompanyName').value = appData.metadata.companyName || '';
+            document.getElementById('metaCustodianName').value = appData.metadata.custodianName || '';
+            document.getElementById('metaReportNumber').value = appData.metadata.reportNumber || '';
+            document.getElementById('metaReportDate').value = appData.metadata.reportDate || '';
+            document.getElementById('metaInitialFund').value = appData.metadata.initialFund ? formatNumber(appData.metadata.initialFund) : '';
+            document.getElementById('expDate').value = appData.metadata.reportDate || '';
+        }
+
+        /* FORM HANDLING */
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const editId = document.getElementById('editingId').value;
+            const amountVal = parseCleanNumber(document.getElementById('expAmount').value);
+
+            if (amountVal <= 0) {
+                return;
+            }
+
+            const item = {
+                id: editId || 'exp_' + Date.now(),
+                date: document.getElementById('expDate').value.trim(),
+                docNum: document.getElementById('expDocNum').value.trim(),
+                category: document.getElementById('expCategory').value,
+                vendor: document.getElementById('expVendor').value.trim(),
+                amount: amountVal,
+                desc: document.getElementById('expDesc').value.trim()
+            };
+
+            if (editId) {
+                const index = appData.expenses.findIndex(x => x.id === editId);
+                if (index !== -1) appData.expenses[index] = item;
+            } else {
+                appData.expenses.unshift(item); // Add newest first
+            }
+
+            saveData();
+            resetForm();
+            renderAll();
+            switchTab('tab-list'); // Move user to list tab smoothly
+        }
+
+        function editExpense(id) {
+            const item = appData.expenses.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('expDate').value = item.date;
+            document.getElementById('expDocNum').value = item.docNum;
+            document.getElementById('expCategory').value = item.category;
+            document.getElementById('expVendor').value = item.vendor;
+            document.getElementById('expAmount').value = formatNumber(item.amount);
+            document.getElementById('expDesc').value = item.desc;
+
+            updateExpenseWordsPreview(item.amount);
+
+            document.getElementById('formTitleText').textContent = 'ویرایش سند هزینه';
+            document.getElementById('submitBtnText').textContent = 'ذخیره تغییرات';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            switchTab('tab-form');
+        }
+
+        function deleteExpense(id) {
+            appData.expenses = appData.expenses.filter(x => x.id !== id);
+            saveData();
+            renderAll();
+        }
+
+        function resetForm() {
+            document.getElementById('expenseForm').reset();
+            document.getElementById('editingId').value = '';
+            document.getElementById('formTitleText').textContent = 'ثبت هزینه / فاکتور جدید';
+            document.getElementById('submitBtnText').textContent = 'ثبت و افزودن به لیست';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            document.getElementById('expWordsHint').textContent = '---';
+            document.getElementById('expDate').value = appData.metadata.reportDate || '';
+        }
+
+        function confirmResetAll() {
+            const isConfirmed = window.confirm("آیا مایل به شروع دوره جدید هستید؟ تمامی داده‌ها و اسناد هزینه فعلی پاک خواهند شد.");
+            if (isConfirmed) {
+                appData.expenses = [];
+                appData.metadata.initialFund = 0;
+                document.getElementById('metaInitialFund').value = '';
+                document.getElementById('metaReportNumber').value = 'TN-' + Math.floor(1000 + Math.random() * 9000);
+                saveData();
+                resetForm();
+                renderAll();
+                switchTab('tab-form');
+            }
+        }
+
+        function updateCalculations() {
+            const initial = appData.metadata.initialFund || 0;
+            const total = appData.expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+            const remaining = initial - total;
+            const count = appData.expenses.length;
+            const unit = appData.currency === 'toman' ? 'تومان' : 'ریال';
+
+            // Top KPIs
+            document.getElementById('kpiInitialFund').textContent = formatNumber(initial);
+            document.getElementById('kpiTotalExpenses').textContent = formatNumber(total);
+            document.getElementById('kpiRemainingBalance').textContent = formatNumber(remaining);
+            document.getElementById('kpiItemsCount').textContent = count;
+
+            const remEl = document.getElementById('kpiRemainingBalance');
+            if (remaining < 0) {
+                remEl.className = 'text-sm sm:text-lg font-black text-rose-600 truncate';
+            } else {
+                remEl.className = 'text-sm sm:text-lg font-black text-emerald-600 truncate';
+            }
+
+            // Badges
+            document.getElementById('deskCountBadge').textContent = count;
+            document.getElementById('mobCountBadge').textContent = count;
+
+            // In Words
+            document.getElementById('initialFundWords').textContent = initial > 0 ? numToPersianWords(initial) + ' ' + unit : 'صفر ' + unit;
+            
+            // Report tab preview sync
+            document.getElementById('repSummaryCustodian').textContent = appData.metadata.custodianName || 'نامشخص';
+            document.getElementById('repSummaryInit').textContent = formatNumber(initial) + ' ' + unit;
+            document.getElementById('repSummarySpent').textContent = formatNumber(total) + ' ' + unit;
+            document.getElementById('repSummaryRem').textContent = formatNumber(remaining) + ' ' + unit;
+            document.getElementById('repSummaryWords').textContent = total > 0 ? numToPersianWords(total) + ' ' + unit : 'صفر ' + unit;
+
+            // Official Print Sync
+            document.getElementById('printHeaderCompany').textContent = appData.metadata.companyName || 'شرکت / سازمان';
+            document.getElementById('printRepNumber').textContent = appData.metadata.reportNumber || '---';
+            document.getElementById('printRepDate').textContent = appData.metadata.reportDate || '---';
+            document.getElementById('printCustodian').textContent = appData.metadata.custodianName || '---';
+            document.getElementById('printInitialFund').textContent = formatNumber(initial);
+            document.getElementById('printTotalExpenses').textContent = formatNumber(total);
+            document.getElementById('printRemaining').textContent = formatNumber(remaining);
+            document.getElementById('printSumTotal').textContent = formatNumber(total) + ' ' + unit;
+            document.getElementById('printSumWords').textContent = numToPersianWords(total) + ' ' + unit;
+        }
+
+        function renderExpenses() {
+            const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+            const catFilter = document.getElementById('categoryFilter').value;
+
+            // Filter logic
+            const filtered = appData.expenses.filter(item => {
+                const matchQuery = !query || 
+                    item.desc.toLowerCase().includes(query) ||
+                    item.vendor.toLowerCase().includes(query) ||
+                    item.docNum.toLowerCase().includes(query);
+                const matchCat = (catFilter === 'ALL') || (item.category === catFilter);
+                return matchQuery && matchCat;
+            });
+
+            const mobileContainer = document.getElementById('mobileCardsContainer');
+            const desktopBody = document.getElementById('desktopTableBody');
+            const printBody = document.getElementById('printTableBody');
+            const emptyState = document.getElementById('emptyListState');
+
+            mobileContainer.innerHTML = '';
+            desktopBody.innerHTML = '';
+            printBody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            let filteredSum = 0;
+
+            filtered.forEach((item, index) => {
+                filteredSum += item.amount;
+
+                // 1. Render Mobile Ergonomic Card
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-4 border border-slate-200/90 shadow-sm space-y-2.5';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <span class="inline-block px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-[11px] font-bold">
+                                ${escapeHtml(item.category)}
+                            </span>
+                            <span class="text-slate-400 text-[11px] font-semibold mr-1.5">${escapeHtml(item.date)}</span>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">
+                            ${escapeHtml(item.docNum)}
+                        </span>
+                    </div>
+
+                    <div class="text-xs font-bold text-slate-800 leading-relaxed">
+                        ${escapeHtml(item.desc)}
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                        <span class="text-slate-500 font-medium">طرف حساب: <strong class="text-slate-700">${escapeHtml(item.vendor)}</strong></span>
+                        <div class="text-left">
+                            <span class="text-sm font-black text-rose-600">${formatNumber(item.amount)}</span>
+                            <span class="text-[10px] text-slate-400 currencyLabel font-medium">${appData.currency === 'toman' ? 'تومان' : 'ریال'}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-1">
+                        <button onclick="editExpense('${item.id}')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            ویرایش
+                        </button>
+                        <button onclick="deleteExpense('${item.id}')" class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            حذف
+                        </button>
+                    </div>
+                `;
+                mobileContainer.appendChild(card);
+
+                // 2. Render Desktop Table Row
+                const dRow = document.createElement('tr');
+                dRow.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+                dRow.innerHTML = `
+                    <td class="py-3 px-3 text-center text-slate-400 font-bold">${index + 1}</td>
+                    <td class="py-3 px-3">${escapeHtml(item.date)}</td>
+                    <td class="py-3 px-3 font-mono font-bold text-slate-600">${escapeHtml(item.docNum)}</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700 text-[11px] font-semibold">${escapeHtml(item.category)}</span></td>
+                    <td class="py-3 px-3 font-semibold">${escapeHtml(item.vendor)}</td>
+                    <td class="py-3 px-4 leading-relaxed">${escapeHtml(item.desc)}</td>
+                    <td class="py-3 px-4 text-left font-black text-rose-600">${formatNumber(item.amount)}</td>
+                    <td class="py-3 px-3 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="editExpense('${item.id}')" class="p-1 text-slate-400 hover:text-emerald-600 transition" title="ویرایش">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </button>
+                            <button onclick="deleteExpense('${item.id}')" class="p-1 text-slate-400 hover:text-rose-600 transition" title="حذف">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                desktopBody.appendChild(dRow);
+            });
+
+            // 3. Render Official Print Rows (Includes All Unfiltered Items)
+            appData.expenses.forEach((item, index) => {
+                const pRow = document.createElement('tr');
+                pRow.className = 'border-b border-black';
+                pRow.innerHTML = `
+                    <td class="border border-black p-1 text-center font-bold">${index + 1}</td>
+                    <td class="border border-black p-1 text-center">${escapeHtml(item.date)}</td>
+                    <td class="border border-black p-1 text-center font-mono font-bold">${escapeHtml(item.docNum)}</td>
+                    <td class="border border-black p-1 text-center">${escapeHtml(item.category)}</td>
+                    <td class="border border-black p-1 text-center">${escapeHtml(item.vendor)}</td>
+                    <td class="border border-black p-1.5 text-right leading-tight">${escapeHtml(item.desc)}</td>
+                    <td class="border border-black p-1 text-left font-black">${formatNumber(item.amount)}</td>
+                `;
+                printBody.appendChild(pRow);
+            });
+
+            document.getElementById('desktopTableTotal').textContent = formatNumber(filteredSum);
+        }
+
+        function renderAll() {
+            renderExpenses();
+            updateCalculations();
+        }
+
+        /* EXPORT EXCEL (CSV WITH UTF-8 BOM) */
+        function exportToCSV() {
+            if (appData.expenses.length === 0) {
+                return;
+            }
+
+            const unit = appData.currency === 'toman' ? 'تومان' : 'ریال';
+            const bom = "\uFEFF";
+            let csv = bom;
+
+            // Headers & Metadata
+            csv += `صورت تنخواه‌گردان\n`;
+            csv += `شرکت / سازمان:,${cleanCsv(appData.metadata.companyName)}\n`;
+            csv += `مسئول تنخواه:,${cleanCsv(appData.metadata.custodianName)}\n`;
+            csv += `شماره گزارش:,${cleanCsv(appData.metadata.reportNumber)}\n`;
+            csv += `تاریخ گزارش:,${cleanCsv(appData.metadata.reportDate)}\n`;
+            csv += `سقف تنخواه دریافتی (${unit}):,${appData.metadata.initialFund}\n\n`;
+
+            csv += `ردیف,تاریخ,شماره فاکتور/رسید,سرفصل هزینه,طرف حساب / فروشنده,شرح هزینه,مبلغ (${unit})\n`;
+
+            let total = 0;
+            appData.expenses.forEach((item, i) => {
+                total += item.amount;
+                csv += `${i + 1},${cleanCsv(item.date)},${cleanCsv(item.docNum)},${cleanCsv(item.category)},${cleanCsv(item.vendor)},${cleanCsv(item.desc)},${item.amount}\n`;
+            });
+
+            csv += `\n,,,,,جمع کل هزینه‌ها:,${total}\n`;
+            csv += `,,,,,مانده قابل تسویه:,${appData.metadata.initialFund - total}\n`;
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `صورت_تنخواه_${appData.metadata.reportNumber || 'گزارش'}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function cleanCsv(val) {
+            if (!val) return '';
+            const str = val.toString().replace(/"/g, '""');
+            return `"${str}"`;
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
